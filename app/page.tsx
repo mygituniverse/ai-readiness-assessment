@@ -1,15 +1,59 @@
 "use client";
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Brain, CheckCircle2, Clock, TrendingUp } from 'lucide-react';
+import { Brain, CheckCircle2, Clock, TrendingUp, User } from 'lucide-react';
 import Link from 'next/link';
+import { createClient } from '@/lib/supabase/client';
+import { LogoutButton } from '@/components/logout-button';
+import type { User as SupabaseUser } from '@supabase/supabase-js';
 
 export default function HomePage() {
+  const [user, setUser] = useState<SupabaseUser | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const supabase = createClient();
+    
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUser(user);
+      setLoading(false);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary/20">
       <div className="container mx-auto px-3 sm:px-4 py-8 sm:py-12 max-w-4xl">
+        {/* User Info Bar */}
+        {!loading && (
+          <div className="flex justify-end mb-4">
+            {user ? (
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <User className="w-4 h-4" />
+                  <span>{user.email}</span>
+                </div>
+                <LogoutButton />
+              </div>
+            ) : (
+              <div className="flex gap-2">
+                <Link href="/auth/login">
+                  <Button variant="outline" size="sm">Login</Button>
+                </Link>
+                <Link href="/auth/sign-up">
+                  <Button size="sm">Sign Up</Button>
+                </Link>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Header */}
         <div className="text-center mb-8 sm:mb-12">
           <div className="flex justify-center mb-3 sm:mb-4">
@@ -110,9 +154,15 @@ export default function HomePage() {
               <Brain className="ml-2 w-4 h-4 sm:w-5 sm:h-5" />
             </Button>
           </Link>
-          <p className="text-xs sm:text-sm text-muted-foreground mt-3 sm:mt-4">
-            No signup required • Results available immediately
-          </p>
+          {user ? (
+            <p className="text-xs sm:text-sm text-muted-foreground mt-3 sm:mt-4">
+              Your results will be saved to your account
+            </p>
+          ) : (
+            <p className="text-xs sm:text-sm text-muted-foreground mt-3 sm:mt-4">
+              Sign up to save your results and track progress over time
+            </p>
+          )}
         </div>
       </div>
     </div>

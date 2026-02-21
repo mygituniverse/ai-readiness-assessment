@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AssessmentSubmission } from '@/lib/types/assessment';
 import { calculateMaturityScore, determineSegment } from '@/lib/assessment/scoring';
+import { createClient } from '@/lib/supabase/client';
+import { toast } from 'sonner';
 import { AssessmentHeader } from '@/components/assessment/AssessmentHeader';
 import { AssessmentNavigation } from '@/components/assessment/AssessmentNavigation';
 import { CompanySnapshotStep } from '@/components/assessment/CompanySnapshotStep';
@@ -40,6 +42,7 @@ const STEP_DESCRIPTIONS = {
 export default function AssessmentPage() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
+  const [userId, setUserId] = useState<string | null>(null);
   const [formData, setFormData] = useState<Partial<AssessmentSubmission>>({
     companyName: '',
     industry: '',
@@ -72,6 +75,13 @@ export default function AssessmentPage() {
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setUserId(user?.id || null);
+    });
+  }, []);
 
   const updateField = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -155,7 +165,7 @@ export default function AssessmentPage() {
     }
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const submission: AssessmentSubmission = {
       ...formData as AssessmentSubmission,
       timestamp: new Date().toISOString(),
@@ -167,8 +177,54 @@ export default function AssessmentPage() {
     submission.maturityScore = score;
     submission.segment = segment;
 
-    localStorage.setItem('assessmentSubmission', JSON.stringify(submission));
-    router.push('/results');
+    if (userId) {
+      // Save to Supabase
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from('assessments')
+        .insert({
+          user_id: userId,
+          company_name: submission.companyName,
+          industry: submission.industry,
+          employees: submission.employees,
+          role: submission.role,
+          country: submission.country,
+          goals: submission.goals,
+          time_wasters: submission.timeWasters,
+          ai_usage_level: submission.aiUsageLevel,
+          ai_tools: submission.aiTools,
+          other_ai_tools: submission.otherAiTools,
+          ai_users: submission.aiUsers,
+          department_scores: submission.departmentScores,
+          automated_processes: submission.automatedProcesses,
+          data_storage: submission.dataStorage,
+          core_systems: submission.coreSystems,
+          ai_policy: submission.aiPolicy,
+          data_types: submission.dataTypes,
+          biggest_concern: submission.biggestConcern,
+          email: submission.email,
+          wants_call: submission.wantsCall,
+          comments: submission.comments,
+          maturity_score: submission.maturityScore,
+          segment: submission.segment,
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error saving assessment:', error);
+        toast.error('Failed to save assessment');
+        return;
+      }
+
+      // Store assessment ID in localStorage for results page
+      localStorage.setItem('currentAssessmentId', data.id);
+      router.push('/results');
+    } else {
+      // Fallback to localStorage if not logged in
+      localStorage.setItem('assessmentSubmission', JSON.stringify(submission));
+      router.push('/results');
+    }
   };
 
   const showAutomatedProcesses = !!(formData.departmentScores && 

@@ -12,6 +12,7 @@ import { getLowestScoringDepartments } from '@/lib/assessment/scoring';
 import { generateQuickWins } from '@/lib/assessment/quickWins';
 import { generateConsultantBrief } from '@/lib/assessment/consultantBrief';
 import { toast } from 'sonner';
+import { createClient } from '@/lib/supabase/client';
 
 export default function ResultsPage() {
   const router = useRouter();
@@ -21,21 +22,81 @@ export default function ResultsPage() {
   const [showFullBrief, setShowFullBrief] = useState(false);
 
   useEffect(() => {
-    const storedData = localStorage.getItem('assessmentSubmission');
-    if (!storedData) {
-      router.push('/assessment');
-      return;
-    }
+    const loadAssessment = async () => {
+      const assessmentId = localStorage.getItem('currentAssessmentId');
+      
+      if (assessmentId) {
+        // Load from Supabase
+        const supabase = createClient();
+        const { data, error } = await supabase
+          .from('assessments')
+          .select('*')
+          .eq('id', assessmentId)
+          .single();
 
-    const data: AssessmentSubmission = JSON.parse(storedData);
-    setSubmission(data);
+        if (error || !data) {
+          console.error('Error loading assessment:', error);
+          router.push('/assessment');
+          return;
+        }
 
-    const lowestDepts = getLowestScoringDepartments(data.departmentScores);
-    const wins = generateQuickWins(lowestDepts);
-    setQuickWins(wins);
+        // Convert database format to AssessmentSubmission format
+        const assessmentData: AssessmentSubmission = {
+          timestamp: data.timestamp,
+          companyName: data.company_name,
+          industry: data.industry,
+          employees: data.employees,
+          role: data.role,
+          country: data.country,
+          goals: data.goals,
+          timeWasters: data.time_wasters,
+          aiUsageLevel: data.ai_usage_level,
+          aiTools: data.ai_tools,
+          otherAiTools: data.other_ai_tools,
+          aiUsers: data.ai_users,
+          departmentScores: data.department_scores,
+          automatedProcesses: data.automated_processes,
+          dataStorage: data.data_storage,
+          coreSystems: data.core_systems,
+          aiPolicy: data.ai_policy,
+          dataTypes: data.data_types,
+          biggestConcern: data.biggest_concern,
+          email: data.email,
+          wantsCall: data.wants_call,
+          comments: data.comments,
+          maturityScore: data.maturity_score,
+          segment: data.segment,
+        };
 
-    const brief = generateConsultantBrief(data);
-    setConsultantBrief(brief);
+        setSubmission(assessmentData);
+
+        const lowestDepts = getLowestScoringDepartments(assessmentData.departmentScores);
+        const wins = generateQuickWins(lowestDepts);
+        setQuickWins(wins);
+
+        const brief = generateConsultantBrief(assessmentData);
+        setConsultantBrief(brief);
+      } else {
+        // Fallback to localStorage
+        const storedData = localStorage.getItem('assessmentSubmission');
+        if (!storedData) {
+          router.push('/assessment');
+          return;
+        }
+
+        const data: AssessmentSubmission = JSON.parse(storedData);
+        setSubmission(data);
+
+        const lowestDepts = getLowestScoringDepartments(data.departmentScores);
+        const wins = generateQuickWins(lowestDepts);
+        setQuickWins(wins);
+
+        const brief = generateConsultantBrief(data);
+        setConsultantBrief(brief);
+      }
+    };
+
+    loadAssessment();
   }, [router]);
 
   const handleCopyBrief = async () => {
@@ -67,6 +128,7 @@ export default function ResultsPage() {
 
   const handleRestart = () => {
     localStorage.removeItem('assessmentSubmission');
+    localStorage.removeItem('currentAssessmentId');
     router.push('/');
   };
 
