@@ -1,0 +1,154 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+@layer base {
+  :root {
+    --background: 210 20% 98%;
+    --foreground: 215 25% 15%;
+    --card: 0 0% 100%;
+    --card-foreground: 215 25% 15%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 25% 15%;
+    --primary: 215 85% 45%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 20% 95%;
+    --secondary-foreground: 215 25% 15%;
+    --muted: 210 20% 95%;
+    --muted-foreground: 215 15% 45%;
+    --accent: 175 65% 45%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 215 20% 88%;
+    --input: 215 20% 88%;
+    --ring: 215 85% 45%;
+    --chart-1: 215 85% 55%;
+    --chart-2: 175 65% 50%;
+    --chart-3: 145 60% 45%;
+    --chart-4: 45 90% 55%;
+    --chart-5: 25 85% 60%;
+    --radius: 0.5rem;
+    --sidebar-background: 210 20% 98%;
+    --sidebar-foreground: 215 25% 15%;
+    --sidebar-primary: 215 85% 45%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 20% 95%;
+    --sidebar-accent-foreground: 215 25% 15%;
+    --sidebar-border: 215 20% 88%;
+    --sidebar-ring: 215 85% 45%;
+  }
+  .dark {
+    --background: 215 30% 8%;
+    --foreground: 210 20% 95%;
+    --card: 215 25% 12%;
+    --card-foreground: 210 20% 95%;
+    --popover: 215 25% 12%;
+    --popover-foreground: 210 20% 95%;
+    --primary: 215 85% 55%;
+    --primary-foreground: 215 30% 8%;
+    --secondary: 215 25% 16%;
+    --secondary-foreground: 210 20% 95%;
+    --muted: 215 25% 16%;
+    --muted-foreground: 215 15% 60%;
+    --accent: 175 65% 50%;
+    --accent-foreground: 215 30% 8%;
+    --destructive: 0 62.8% 50%;
+    --destructive-foreground: 210 20% 95%;
+    --border: 215 25% 20%;
+    --input: 215 25% 20%;
+    --ring: 215 85% 55%;
+    --chart-1: 215 85% 60%;
+    --chart-2: 175 65% 55%;
+    --chart-3: 145 60% 50%;
+    --chart-4: 45 90% 60%;
+    --chart-5: 25 85% 65%;
+    --sidebar-background: 215 30% 10%;
+    --sidebar-foreground: 210 20% 95%;
+    --sidebar-primary: 215 85% 55%;
+    --sidebar-primary-foreground: 215 30% 8%;
+    --sidebar-accent: 215 25% 16%;
+    --sidebar-accent-foreground: 210 20% 95%;
+    --sidebar-border: 215 25% 20%;
+    --sidebar-ring: 215 85% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Print styles */
+@media print {
+  /* Hide action buttons and interactive elements when printing */
+  button,
+  .no-print {
+    display: none !important;
+  }
+
+  /* Remove background colors and gradients for better printing */
+  body {
+    background: white !important;
+    color: black !important;
+  }
+
+  /* Optimize page layout for printing */
+  .container {
+    max-width: 100% !important;
+    padding: 0 !important;
+  }
+
+  /* Ensure cards print well */
+  .border-2 {
+    border-width: 1px !important;
+  }
+
+  /* Show full consultant brief when printing */
+  .max-h-48,
+  .max-h-64 {
+    max-height: none !important;
+  }
+
+  /* Hide the gradient overlay on consultant brief */
+  .bg-gradient-to-t {
+    display: none !important;
+  }
+
+  /* Ensure proper page breaks */
+  .mb-6,
+  .mb-8 {
+    page-break-inside: avoid;
+  }
+
+  /* Remove unnecessary padding for print */
+  .py-4,
+  .py-8 {
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+  }
+
+  /* Optimize text for print */
+  h1, h2, h3, h4, h5, h6 {
+    color: black !important;
+  }
+
+  /* Ensure badges and colored elements are visible */
+  .bg-blue-500,
+  .bg-green-500,
+  .bg-orange-500,
+  .bg-purple-500 {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+}
