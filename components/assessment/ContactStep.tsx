@@ -26,9 +26,9 @@ export function ContactStep({ formData, errors, updateField }: ContactStepProps)
       </div>
 
       <div className="space-y-2">
-        <Label className="text-sm sm:text-base">Interested in a free 15-minute AI opportunity call?</Label>
+        <Label className="text-sm sm:text-base">Interested in a free 15-minute AI opportunity call? *</Label>
         <RadioGroup 
-          value={formData.wantsCall ? 'Yes' : 'No'} 
+          value={formData.wantsCall === undefined ? undefined : formData.wantsCall ? 'Yes' : 'No'} 
           onValueChange={(value) => updateField('wantsCall', value === 'Yes')}
         >
           <div className="flex items-center space-x-2">
@@ -40,6 +40,7 @@ export function ContactStep({ formData, errors, updateField }: ContactStepProps)
             <Label htmlFor="call-no" className="text-sm sm:text-base font-normal cursor-pointer">No</Label>
           </div>
         </RadioGroup>
+        {errors.wantsCall && <p className="text-sm text-destructive">{errors.wantsCall}</p>}
       </div>
 
       <div className="space-y-2">

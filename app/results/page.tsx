@@ -13,6 +13,7 @@ import { generateQuickWins } from '@/lib/assessment/quickWins';
 import { generateConsultantBrief } from '@/lib/assessment/consultantBrief';
 import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
+import { SaveResultsDialog } from '@/components/SaveResultsDialog';
 
 export default function ResultsPage() {
   const router = useRouter();
@@ -20,6 +21,68 @@ export default function ResultsPage() {
   const [quickWins, setQuickWins] = useState<QuickWin[]>([]);
   const [consultantBrief, setConsultantBrief] = useState('');
   const [showFullBrief, setShowFullBrief] = useState(false);
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  // Check authentication and save localStorage data if user just logged in
+  useEffect(() => {
+    const checkAuthAndSave = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      setIsAuthenticated(!!user);
+
+      // If user is authenticated and we have localStorage data (not saved yet), save it
+      if (user) {
+        const storedData = localStorage.getItem('assessmentSubmission');
+        const assessmentId = localStorage.getItem('currentAssessmentId');
+        
+        if (storedData && !assessmentId) {
+          // User just logged in and has unsaved data - save it now
+          const data: AssessmentSubmission = JSON.parse(storedData);
+          
+          const { data: savedData, error } = await supabase
+            .from('assessments')
+            .insert({
+              user_id: user.id,
+              company_name: data.companyName,
+              industry: data.industry,
+              employees: data.employees,
+              role: data.role,
+              country: data.country,
+              goals: data.goals,
+              time_wasters: data.timeWasters,
+              ai_usage_level: data.aiUsageLevel,
+              ai_tools: data.aiTools,
+              other_ai_tools: data.otherAiTools,
+              ai_users: data.aiUsers,
+              department_scores: data.departmentScores,
+              automated_processes: data.automatedProcesses,
+              data_storage: data.dataStorage,
+              core_systems: data.coreSystems,
+              ai_policy: data.aiPolicy,
+              data_types: data.dataTypes,
+              biggest_concern: data.biggestConcern,
+              email: data.email,
+              wants_call: data.wantsCall,
+              comments: data.comments,
+              maturity_score: data.maturityScore,
+              segment: data.segment,
+            })
+            .select()
+            .single();
+
+          if (!error && savedData) {
+            localStorage.setItem('currentAssessmentId', savedData.id);
+            localStorage.removeItem('assessmentSubmission');
+            toast.success('Your results have been saved to your account!');
+          }
+        }
+      }
+    };
+
+    checkAuthAndSave();
+  }, []);
 
   useEffect(() => {
     const loadAssessment = async () => {
@@ -93,11 +156,16 @@ export default function ResultsPage() {
 
         const brief = generateConsultantBrief(data);
         setConsultantBrief(brief);
+        
+        // Show save dialog for unauthenticated users after a short delay
+        if (!isAuthenticated) {
+          setTimeout(() => setShowSaveDialog(true), 1500);
+        }
       }
     };
 
     loadAssessment();
-  }, [router]);
+  }, [router, isAuthenticated]);
 
   const handleCopyBrief = async () => {
     try {
@@ -339,6 +407,9 @@ export default function ResultsPage() {
           <p className="mt-1">Download the JSON file to keep a permanent copy.</p>
         </div>
       </div>
+
+      {/* Save Results Dialog */}
+      <SaveResultsDialog open={showSaveDialog} onOpenChange={setShowSaveDialog} />
     </div>
   );
 }

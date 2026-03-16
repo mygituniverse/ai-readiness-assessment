@@ -70,7 +70,7 @@ export default function AssessmentPage() {
     dataTypes: [],
     biggestConcern: '',
     email: '',
-    wantsCall: false,
+    wantsCall: undefined,
     comments: '',
   });
 
@@ -139,6 +139,9 @@ export default function AssessmentPage() {
           newErrors.email = 'Email is required';
         } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
           newErrors.email = 'Please enter a valid email';
+        }
+        if (formData.wantsCall === undefined) {
+          newErrors.wantsCall = 'Please select an option';
         }
         break;
     }

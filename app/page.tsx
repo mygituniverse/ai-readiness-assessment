@@ -160,7 +160,7 @@ export default function HomePage() {
             </p>
           ) : (
             <p className="text-xs sm:text-sm text-muted-foreground mt-3 sm:mt-4">
-              Sign up to save your results and track progress over time
+              No login required • Sign up at the end to save your results
             </p>
           )}
         </div>
